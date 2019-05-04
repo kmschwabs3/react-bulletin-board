@@ -11,7 +11,35 @@ class Note extends Component {
 		this.remove = this.remove.bind(this)
 		this.renderForm = this.renderForm.bind(this)
 		this.renderDisplay = this.renderDisplay.bind(this)
-		this.save = this.save.bind(this)
+		this.save = this.save.bind(this) 
+		this.randomBetween = this.randomBetween.bind(this)
+	}
+
+	componentWillMount () {
+		this.style = {
+			right: this.randomBetween(0, window.innerWidth - 150, 'px'),
+			top: this.randomBetween(0, window.innerHeight - 150, 'px'),
+			transform: `rotate(${this.randomBetween(-25, 25, 'deg')})`
+		}
+	}
+
+	randomBetween(x, y, s){
+		return x + Math.ceil(Math.random() *(y - x)) + s
+	}
+
+	componentDidUpdate(){
+		var textArea
+		if (this.state.editing) {
+			textArea = this._newText
+			textArea.focus()
+			textArea.select()
+		}
+	}
+
+	shouldComponentUpdate(nextProps, nextState) {
+		return (
+			this.props.children !== nextProps.children || this.state !== nextState
+			)
 	}
 
 	edit() {
@@ -19,28 +47,32 @@ class Note extends Component {
 	}
 
 	remove(){
-		alert('Removing Note!')
+		this.props.onRemove(this.props.index)
 	}
 
-	save(){
-		alert(this._newText.value)
+	save(e) {
+		e.preventDefault()
+		this.props.onChange(this._newText.value, this.props.index)
+		this.setState({
+			editing: false
+		})
 	}
 
 	renderForm(){
 		return(
-			<div className="note">
-				<from>
-
-					<textarea ref={input => this._newText = input}/> //this takes the typed text and makes it a value
-					<button onClick={this.save}><FaSave /></button>
-				</from>
+			<div className="note" style={this.style}>
+				<form onSubmit={this.save}>
+					<textarea ref={input => this._newText = input}
+						defaultValue={this.props.children}/>
+					<button id="save"><FaSave /></button>
+				</form>
 			</div>
 			)
 	}
 
 	renderDisplay(){
 		return (
-			<div className="note">
+			<div className="note" style={this.style}>
 				<p>{this.props.children}</p>
 				<span>
 					<button onClick={this.edit} id="edit"><FaEdit /></button>
@@ -49,6 +81,7 @@ class Note extends Component {
 			</div>
 			)
 	}
+
 	render (){
 		return this.state.editing ? this.renderForm() : this.renderDisplay()
         /*the code above refactors this if else statement below
